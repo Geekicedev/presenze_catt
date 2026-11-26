@@ -1,0 +1,2996 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Presenze">
+  <title>UniPresenze - Gestione Intelligente Frequenze</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --card-hover: #162032;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.25);
+      --accent-hover: #2563eb;
+      --cyan: #06b6d4;
+      --text: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border: #232e42;
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.18);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.18);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.18);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+      padding-top: 0;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4d6b; }
+
+    .container {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 12px 0;
+      padding-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    .header-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .brand-logo svg { width: 22px; height: 22px; color: white; }
+    .brand-name {
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+    .brand-tag {
+      font-size: 0.65rem;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 2px 6px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .header-user-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sync-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+    .sync-status-pill.saved {
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.3);
+      background: var(--success-glow);
+    }
+    .sync-status-pill.saving {
+      color: var(--accent);
+      border-color: rgba(59, 130, 246, 0.3);
+      background: var(--accent-glow);
+    }
+    .sync-status-pill.offline {
+      color: var(--warning);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .dot-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .sync-status-pill.saving .dot-indicator {
+      animation: pulse-anim 1s infinite alternate;
+    }
+    @keyframes pulse-anim {
+      from { opacity: 0.3; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Profilo Utente Cliccabile nell'Header */
+    .user-profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 4px 12px 4px 6px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .user-profile-badge:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      display: grid;
+      place-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      text-decoration: none;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+    .btn-secondary {
+      background: #1e293b;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      background: #27354f;
+      border-color: #3b4d6b;
+    }
+    .btn-outline-danger {
+      background: transparent;
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-outline-danger:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: var(--danger);
+    }
+    .btn-danger-solid {
+      background: #dc2626;
+      color: white;
+    }
+    .btn-danger-solid:hover { background: #b91c1c; }
+    .btn-sm {
+      padding: 4px 9px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    .callout {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .callout-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      user-select: none;
+    }
+    .callout-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .callout-body {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      border-top: 1px dashed var(--border);
+      padding-top: 10px;
+      display: none;
+    }
+    .callout-body.open { display: block; }
+    .callout-body ul { margin-left: 20px; margin-top: 6px; }
+
+    .simulator-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.02));
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .simulator-title {
+      font-weight: 700;
+      color: #fbbf24;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .simulator-sub {
+      font-size: 0.78rem;
+      color: #d1d5db;
+      margin-top: 2px;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #f59e0b; border-color: #f59e0b; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    .dashboard-actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .actions-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .course-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .course-card:hover {
+      border-color: #2e3e5c;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+    }
+    .course-card.status-ok { border-left: 4px solid var(--success); }
+    .course-card.status-warning { border-left: 4px solid var(--warning); }
+    .course-card.status-danger { border-left: 4px solid var(--danger); }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .course-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .course-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-ok { background: var(--success-glow); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: var(--warning-glow); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: var(--danger-glow); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .metric-item { display: flex; flex-direction: column; }
+    .metric-val { font-size: 1.15rem; font-weight: 700; color: #fff; }
+    .metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .progress-section { margin-bottom: 12px; }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      margin-bottom: 6px;
+    }
+    .progress-bar-bg {
+      background: #1e293b;
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* REDESIGN GRAFICO ASSENZE RESIDUE (Badge / Pillola Grafica) */
+    .absence-tracker-card {
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .absence-tracker-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .absence-tracker-label {
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .absence-badge-pill {
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .absence-pill-ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .absence-pill-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .absence-pill-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .absence-bar-track {
+      height: 5px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .absence-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .steppers-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .stepper-unit {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stepper-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ics-synced-pill {
+      font-size: 0.65rem;
+      color: #38bdf8;
+      background: rgba(6, 182, 212, 0.15);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .stepper-controls {
+      display: flex;
+      align-items: center;
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .stepper-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+    .stepper-btn:hover { background: rgba(255,255,255,0.08); color: var(--accent); }
+    .stepper-val {
+      flex: 1;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .card-footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      padding-top: max(16px, env(safe-area-inset-top, 16px));
+      padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-card {
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 580px;
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      overflow: hidden;
+      margin: auto;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 1.15rem; font-weight: 700; }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.3rem;
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.08); color: white; }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .input-field {
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea.input-field {
+      resize: vertical;
+      min-height: 120px;
+      font-family: monospace;
+      font-size: 0.82rem;
+    }
+
+    .auth-wrapper {
+      max-width: 420px;
+      margin: 40px auto 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: #090d16;
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 22px;
+    }
+    .auth-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-tab-btn.active {
+      background: #1e293b;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .wizard-container {
+      max-width: 680px;
+      margin: 30px auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .wizard-progress {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 30px;
+    }
+    .wizard-progress::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: var(--border);
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+    .wizard-step-node {
+      position: relative;
+      z-index: 2;
+      background: #090d16;
+      border: 2px solid var(--border);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+    .wizard-step-node.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .wizard-step-node.done {
+      border-color: var(--success);
+      background: var(--success);
+      color: white;
+    }
+
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; animation: fadeIn 0.25s ease; }
+
+    .wizard-step-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wizard-step-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .step-instruction-box {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+    .step-instruction-box ol { margin-left: 18px; margin-top: 6px; }
+    .step-instruction-box li { margin-bottom: 4px; color: #cbd5e1; }
+
+    /* Sezione Calendario */
+    .ics-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .ics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .ics-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* Divisore Giorno nel Calendario */
+    .day-separator {
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #93c5fd;
+      margin: 12px 0 6px 0;
+      text-transform: capitalize;
+    }
+    .day-separator:first-child { margin-top: 0; }
+
+    .ics-event-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      gap: 10px;
+    }
+    .ics-event-row.suspended {
+      opacity: 0.55;
+      text-decoration: line-through;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+    .ics-event-info { display: flex; flex-direction: column; gap: 2px; }
+    .ics-event-title { font-weight: 600; color: white; }
+    .ics-event-sub { font-size: 0.75rem; color: var(--text-dim); }
+    .ics-event-badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .ics-event-badge.passed {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .ics-event-badge.upcoming {
+      background: rgba(59, 130, 246, 0.12);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+    .attendance-reminder { display: none; margin: 0 0 16px; padding: 16px; border: 1px solid rgba(56,189,248,.35); border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(14,116,144,.18), rgba(30,41,59,.92)); }
+    .attendance-reminder h4 { margin: 0 0 6px; color: white; font-size: .96rem; }
+    .attendance-reminder p { margin: 0 0 12px; color: var(--text-muted); font-size: .82rem; line-height: 1.45; }
+    .attendance-reminder-actions { display:flex; flex-wrap:wrap; gap:8px; }
+
+    /* Modal Profilo / Impostazioni */
+    .profile-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .danger-zone-box {
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.05);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 20px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      right: 20px;
+      left: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #1e293b;
+      color: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      font-size: 0.86rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 9999;
+      transform: translateY(120px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast.toast-success { border-color: rgba(16, 185, 129, 0.4); }
+    .toast.toast-error { border-color: rgba(239, 68, 68, 0.5); background: #1c1524; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--card-bg);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+    .empty-state h3 { font-size: 1.15rem; margin-bottom: 8px; color: white; }
+    .empty-state p { font-size: 0.85rem; color: var(--text-muted); max-width: 460px; margin: 0 auto 16px; }
+
+    @media (max-width: 640px) {
+      body { padding-bottom: max(30px, env(safe-area-inset-bottom, 30px)); }
+      .container { padding: 0 12px; }
+      header { padding-top: max(8px, env(safe-area-inset-top, 8px)); margin-bottom: 16px; }
+      .modal-overlay { padding: 8px; padding-top: max(8px, env(safe-area-inset-top, 8px)); padding-bottom: max(8px, env(safe-area-inset-bottom, 8px)); }
+      .modal-card {
+        max-height: calc(100dvh - 16px);
+        border-radius: var(--radius-md);
+      }
+      .modal-header { padding: 12px 14px; gap: 10px; }
+      #profileModal .modal-header { position: sticky; top: 0; z-index: 2; background: #111827; }
+      #profileModal .modal-title { font-size: 0.98rem; line-height: 1.25; min-width: 0; }
+      #profileModal .modal-close { flex: 0 0 40px; width: 40px; height: 40px; margin: -4px -6px -4px 0; color: #fff; background: rgba(59,130,246,0.18); border: 1px solid rgba(96,165,250,0.55); font-size: 1.8rem; line-height: 1; }
+      .modal-body { padding: 14px 16px; }
+      .modal-footer { padding: 12px 16px; }
+      .courses-grid { grid-template-columns: 1fr; gap: 12px; }
+      .course-card { padding: 14px; border-radius: var(--radius-md); }
+      .metrics-row { grid-template-columns: 1fr 1fr 1fr; padding: 8px; }
+      .brand-name { font-size: 1rem; }
+      .brand-tag { display: none; }
+      .dashboard-actions-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+      .actions-group { justify-content: space-between; }
+      .actions-group .btn { flex: 1; font-size: 0.8rem; padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Navigation -->
+  <header>
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-name">UniPresenze <span class="brand-tag">v2.0</span></span>
+        </div>
+      </div>
+
+      <div class="header-user-actions" id="headerActions">
+        <!-- Generato dinamicamente (Pill Cloud Sync, Profilo Utente cliccabile, Logout) -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" id="mainContainer">
+    <!-- Schermata di Login / Registrazione -->
+    <div id="authScreen" class="auth-wrapper" style="display: none;">
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">Accedi</button>
+        <button class="auth-tab-btn" id="tabRegister" onclick="switchAuthTab('register')">Nuovo Account</button>
+      </div>
+
+      <!-- Form Login -->
+      <form id="formLogin" onsubmit="handleLoginSubmit(event)">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Bentornato 👋</h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">Accedi per sincronizzare le tue presenze con il server.</p>
+
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" class="input-field" id="loginUsername" required placeholder="es. mario.rossi" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="input-field" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Entra nella Dashboard
+        </button>
+      </form>
+
+      <!-- Form Registrazione -->
+      <form id="formRegister" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">Crea Account 🎓</h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px;">I tuoi dati saranno salvati in modo sicuro e isolato.</p>
+
+        <div class="form-group">
+          <label>Nome Completo o Visualizzato</label>
+          <input type="text" class="input-field" id="regDisplayName" placeholder="Mario Rossi">
+        </div>
+
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" class="input-field" id="regUsername" required placeholder="es. mario.rossi" autocomplete="username">
+          <span style="font-size: 0.72rem; color: var(--text-dim);">Minimo 3 caratteri (lettere, numeri, punti o trattini)</span>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="input-field" id="regPassword" required placeholder="••••••••" autocomplete="new-password">
+          <span style="font-size: 0.72rem; color: var(--text-dim);">Minimo 6 caratteri</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Registrati e Inizia Setup
+        </button>
+      </form>
+    </div>
+
+    <!-- Schermata Onboarding Wizard (Primo Accesso) -->
+    <div id="wizardScreen" class="wizard-container" style="display: none;">
+      <div class="wizard-progress">
+        <div class="wizard-step-node active" id="wizardNode1">1</div>
+        <div class="wizard-step-node" id="wizardNode2">2</div>
+        <div class="wizard-step-node" id="wizardNode3">3</div>
+      </div>
+
+      <!-- Step 1: Benvenuto & Spiegazione -->
+      <div class="wizard-step active" id="wizardStep1">
+        <div class="wizard-step-title">
+          <span>👋 Benvenuto su UniPresenze!</span>
+        </div>
+        <div class="wizard-step-desc">
+          Questa applicazione ti aiuta a monitorare le presenze universitarie e a calcolare con precisione quante assenze ti rimangono prima di rischiare l'obbligo di frequenza.
+        </div>
+
+        <div class="step-instruction-box">
+          <strong style="color: #60a5fa; display: block; margin-bottom: 6px;">💡 Come funziona il calcolo:</strong>
+          <ul>
+            <li><strong>Soglia Minima (es. 65% o 70%):</strong> Calcolata sul totale ore/lezioni con <em>arrotondamento matematico per eccesso</em>.</li>
+            <li><strong>Assenze Massime Concesse:</strong> Totale Lezioni meno la Soglia Minima di presenze obbligatorie.</li>
+            <li><strong>Assenze Residue:</strong> Assenze Concesse meno le lezioni che hai già saltato.</li>
+          </ul>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn btn-primary" onclick="goToWizardStep(2)">
+            Inizia la Configurazione &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Importazione iCatt -->
+      <div class="wizard-step" id="wizardStep2">
+        <div class="wizard-step-title">
+          <span>📋 Importazione da iCatt</span>
+        </div>
+        <div class="wizard-step-desc">
+          Importa all'istante l'elenco dei tuoi corsi direttamente dalla tua pagina personale iCatt.
+        </div>
+
+        <div class="step-instruction-box">
+          <strong style="color: #60a5fa; display: block; margin-bottom: 6px;">Istruzioni:</strong>
+          <ol>
+            <li>Apri la pagina delle <strong>Frequenze</strong> su <strong>iCatt</strong>.</li>
+            <li>Seleziona con il mouse e copia (<kbd>Ctrl+C</kbd> / <kbd>Cmd+C</kbd>) l'intera tabella dei corsi (compresi i codici <code>FV...</code>).</li>
+            <li>Incolla il testo nel riquadro sottostante.</li>
+          </ol>
+        </div>
+
+        <div class="form-group">
+          <label>Testo copiato da iCatt</label>
+          <textarea class="input-field" id="wizardImportText" placeholder="FV0123 BIOCHIMICA E BIOLOGIA MOLECOLARE...&#10;Incolla qui la tabella di iCatt"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+          <button class="btn btn-secondary" onclick="goToWizardStep(1)">&larr; Indietro</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" onclick="goToWizardStep(3)">Salta per ora</button>
+            <button class="btn btn-primary" onclick="processWizardImport()">Importa Corsi e Continua &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Configurazione Calendario Lezioni -->
+      <div class="wizard-step" id="wizardStep3">
+        <div class="wizard-step-title">
+          <span>🗓️ Calendario Lezioni</span>
+        </div>
+        <div class="wizard-step-desc">
+          Il calendario viene aggiornato dal server. Le lezioni passate restano da registrare finché non scegli l'esito.
+        </div>
+
+        <div class="step-instruction-box">
+          <strong style="color: #38bdf8; display: block; margin-bottom: 8px;">Registro lezioni:</strong>
+          <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin-bottom: 14px;">
+            Una lezione aumenta i totali solo quando la registri come presente o assente. Quelle non svolte e quelle ancora da decidere non alterano i conteggi.
+          </p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+          <button class="btn btn-secondary" onclick="goToWizardStep(2)">&larr; Indietro</button>
+          <button class="btn btn-primary" onclick="completeWizardSetup()">
+            Completa e Apri Dashboard 🎉
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schermata Dashboard Principale -->
+    <div id="dashboardScreen" style="display: none;">
+
+      <!-- Spiegazione Calcoli e Sincronizzazione -->
+      <div class="callout">
+        <div class="callout-header" onclick="toggleCallout('calloutInfo')">
+          <div class="callout-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </svg>
+            <span>Guida al Calcolo Presenze, Soglie e Sincronizzazione Cloud</span>
+          </div>
+          <span id="calloutInfoIcon" style="color: var(--text-dim); font-size: 0.8rem;">Mostra info ▼</span>
+        </div>
+        <div class="callout-body" id="calloutInfo">
+          <p><strong>Come leggiamo i dati e calcoliamo i margini:</strong></p>
+          <ul>
+            <li><strong>Totale Ore/Lezioni:</strong> Il monte ore complessivo stabilito dall'ateneo per il corso.</li>
+            <li><strong>Soglia Minima Obbligatoria (es. 65% o 70%):</strong> Calcolata con arrotondamento all'intero superiore.</li>
+            <li><strong>Assenze Consentite Totali:</strong> <code>Totale Lezioni - Presenze Minime</code>. Bonus massimo di assenze permesse nel semestre.</li>
+            <li><strong>Assenze Già Fatte:</strong> <code>Lezioni Erogate - Lezioni Presenziate</code>.</li>
+            <li><strong>Assenze Residue:</strong> <code>Assenze Consentite - Assenze Già Fatte</code>. Quando scende a 0, non puoi più saltare alcuna lezione!</li>
+            <li><strong>Sincronizzazione Cloud Automatica:</strong> Ogni modifica viene salvata istantaneamente sul server.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Banner Simulatore di Assenze Future -->
+      <div class="simulator-card">
+        <div>
+          <div class="simulator-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Modalità Simulatore Assenze
+          </div>
+          <div class="simulator-sub">
+            Attiva per simulare cosa succede alla tua percentuale se salti o frequenti le prossime lezioni senza modificare i dati reali.
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: #fbbf24;" id="simStatusLabel">Disattivato</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="simToggle" onchange="toggleSimulator(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Barra Azioni Dashboard (Pulita da export/import che sono nel Profilo) -->
+      <div class="dashboard-actions-bar">
+        <div class="actions-group">
+          <button class="btn btn-primary" onclick="openAddCourseModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Nuovo Corso
+          </button>
+          <button class="btn btn-secondary" onclick="openImportModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Importa da iCatt
+          </button>
+        </div>
+
+        <div class="actions-group">
+          <button class="btn btn-secondary" onclick="loadLessonCatalog()" title="Aggiorna il registro delle lezioni">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Aggiorna registro
+          </button>
+        </div>
+      </div>
+
+      <!-- Griglia Corsi -->
+      <div class="courses-grid" id="coursesContainer">
+        <!-- Renderizzato da JS -->
+      </div>
+
+      <!-- Sezione Calendario Lezioni -->
+      <div class="ics-section">
+        <div class="ics-header">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              📅 Registro lezioni
+            </h3>
+          </div>
+          <div>
+            <button class="btn btn-secondary btn-sm" id="lessonArchiveToggle" onclick="toggleLessonArchive()" style="margin-right:6px">Mostra regolarizzate</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadLessonCatalog()" title="Ricarica il catalogo lezioni">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Ricarica lezioni
+            </button>
+          </div>
+        </div>
+
+        <div class="attendance-reminder" id="attendanceReminder" role="region" aria-live="polite"></div>
+        <div id="lessonPendingSummary" style="margin:0 0 12px;color:var(--text-muted);font-size:.84rem"></div>
+        <div class="ics-list" id="lessonEventsList">
+          <p style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 0.85rem;">Caricamento lezioni in corso...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL: Gestione Profilo & Impostazioni -->
+  <div class="modal-overlay" id="profileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Gestione Profilo & Impostazioni
+        </div>
+        <button class="modal-close" type="button" aria-label="Chiudi profilo" onclick="closeProfileModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1. Modifica Dati Account -->
+        <form id="profileForm" onsubmit="handleUpdateProfile(event)">
+          <div class="profile-section-title">
+            <span>Dati Personali & Accesso</span>
+          </div>
+
+          <div class="form-group">
+            <label>Nome Visualizzato</label>
+            <input type="text" class="input-field" id="profileDisplayName" placeholder="Mario Rossi" required>
+          </div>
+
+          <div class="form-group">
+            <label>Username (Identificativo Account)</label>
+            <input type="text" class="input-field" id="profileUsername" placeholder="mario.rossi" required>
+          </div>
+
+          <div class="form-group">
+            <label>Nuova Password (lascia vuoto per non cambiarla)</label>
+            <input type="password" class="input-field" id="profileNewPassword" placeholder="Minimo 6 caratteri" autocomplete="new-password">
+          </div>
+
+          <!-- 3. Web Push Notifications -->
+          <div class="profile-section-title" style="margin-top: 22px;">
+            <span>🔔 Notifiche Push (Web Push)</span>
+          </div>
+
+          <!-- Alert PWA per iOS / Safari se non standalone -->
+          <div id="pwaInstallWarning" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 0.82rem; color: #fde68a; line-height: 1.4;">
+            <strong>📲 Attenzione utenti iOS / Safari:</strong> Per abilitare le notifiche push su iPhone/iPad è obbligatorio prima installare l'app: tocca l'icona <strong>Condividi (quadrato con freccia)</strong> in Safari e seleziona <strong>"Aggiungi alla schermata Home"</strong>. Poi apri l'app dalla Home.
+          </div>
+
+          <!-- Stato Push e 3 Tasti Separati -->
+          <div style="background: #0d131f; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 0.82rem; color: var(--text-muted);">Stato notifiche sul dispositivo:</span>
+              <span id="pushStatusBadge" class="course-badge badge-warning">Non attive</span>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="btnSubscribePush" onclick="subscribeUserToPush()" style="flex: 1;">
+                🔔 Attiva Notifiche
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnTestPush" onclick="sendTestPushNotification()" style="flex: 1;" disabled>
+                🚀 Invia Notifica di Test
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm" id="btnUnsubscribePush" onclick="unsubscribeUserFromPush()" style="flex: 1;" disabled>
+                🔕 Disattiva
+              </button>
+            </div>
+          </div>
+
+          <div class="profile-section-title" style="margin-top: 12px;">
+            <span>Preferenze per dispositivo</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: -4px 0 10px;">
+            Ogni dispositivo ha le proprie preferenze. Queste impostazioni prevalgono sui valori predefiniti qui sotto.
+          </p>
+          <div id="pushDevicesList" style="margin: 12px 0 16px;"></div>
+
+          <!-- Preferenze generali: valori predefiniti per le nuove registrazioni -->
+          <details style="border: 1px solid var(--border); border-radius: 10px; padding: 0 14px; margin: 14px 0; background: rgba(255,255,255,0.02);">
+            <summary style="cursor: pointer; padding: 13px 0; color: #93c5fd; font-size: 0.84rem; font-weight: 700;">Valori predefiniti per nuovi dispositivi</summary>
+            <p style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 12px;">
+              Si applicano quando registri un nuovo dispositivo. Non modificano le preferenze salvate nelle schede dei dispositivi esistenti.
+            </p>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #93c5fd; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em;">
+                Preferenze predefinite
+              </div>
+
+            <!-- Selettore 1: All'orario di inizio lezione -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.86rem; color: white;">Promemoria registrazione presenza</div>
+                <div style="font-size: 0.74rem; color: var(--text-muted);">Notifica esattamente all'inizio della lezione per segnare la frequenza</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="profileNotifyStart" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Selettore 2: Pre-lezione con dropdown anticipo -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.86rem; color: white;">Promemoria pre-lezione</div>
+                  <div style="font-size: 0.74rem; color: var(--text-muted);">Avviso prima dell'inizio con materia, aula e orario</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="profileNotifyPre" checked onchange="document.getElementById('preMinutesWrapper').style.opacity = this.checked ? '1' : '0.4'">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div id="preMinutesWrapper" style="display: flex; align-items: center; justify-content: space-between; padding-left: 6px; transition: opacity 0.2s;">
+                <label style="font-size: 0.78rem; color: var(--text-dim);">Anticipo avviso:</label>
+                <select id="profilePreMinutes" class="input-field" style="width: auto; padding: 6px 10px; font-size: 0.82rem; border-radius: 6px;">
+                  <option value="10">10 minuti prima</option>
+                  <option value="15" selected>15 minuti prima</option>
+                  <option value="30">30 minuti prima</option>
+                  <option value="45">45 minuti prima</option>
+                  <option value="60">1 ora prima</option>
+                </select>
+              </div>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:14px;padding-top:14px">
+              <label style="display:flex;align-items:center;justify-content:space-between;color:white;font-size:.85rem;font-weight:650">
+                Promemoria per lezioni da regolarizzare
+                <input type="checkbox" id="profilePendingReminderEnabled" checked>
+              </label>
+              <p style="font-size:.74rem;color:var(--text-muted);margin:6px 0 10px">Ricevi un solo riepilogo nei giorni scelti, solo se hai lezioni senza esito.</p>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <label for="profilePendingReminderTime" style="font-size:.8rem;color:var(--text-dim)">Orario</label>
+                <input type="time" id="profilePendingReminderTime" class="input-field" value="18:00" style="width:130px;padding:7px 9px">
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:.76rem;color:#e2e8f0">
+                <label><input type="checkbox" class="pending-reminder-day" value="1"> Lun</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="2"> Mar</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="3"> Mer</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="4"> Gio</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="5"> Ven</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="6"> Sab</label>
+                <label><input type="checkbox" class="pending-reminder-day" value="7"> Dom</label>
+              </div>
+            </div>
+            </div>
+          </details>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+            Salva profilo e valori predefiniti
+          </button>
+        </form>
+
+        <!-- 4. Backup Manuale -->
+        <div class="profile-section-title" style="margin-top: 26px;">
+          <span>Backup Dati (.json)</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          Scarica una copia dei tuoi insegnamenti e presenze sul tuo computer o ripristina un backup precedente.
+        </p>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="exportDataJson()" style="flex: 1;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Esporta Backup (.json)
+          </button>
+          <label class="btn btn-secondary" style="flex: 1; margin: 0; cursor: pointer; text-align: center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Ripristina Backup
+            <input type="file" accept=".json" style="display:none;" onchange="importDataJson(event)">
+          </label>
+        </div>
+
+        <!-- 4. Zona Pericolo: Eliminazione Account -->
+        <div class="danger-zone-box">
+          <div style="font-size: 0.9rem; font-weight: 700; color: #f87171; margin-bottom: 6px;">
+            ⚠️ Zona Pericolo
+          </div>
+          <p style="font-size: 0.78rem; color: #fca5a5; line-height: 1.4; margin-bottom: 12px;">
+            Questa azione è irreversibile. Verranno eliminati permanentemente il tuo account, tutte le frequenze e i dati salvati sul server.
+          </p>
+          <button class="btn btn-danger-solid btn-sm" onclick="handleDeleteAccount()">
+            Elimina Definitivamente Account e Dati
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Aggiungi / Modifica Corso -->
+  <div class="modal-overlay" id="lessonStatusModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Registra lezione</div>
+        <button class="modal-close" type="button" aria-label="Chiudi" onclick="closeLessonStatusModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <h3 id="lessonModalTitle" style="color:white;font-size:1rem;margin:0 0 6px"></h3>
+        <p id="lessonModalDetails" style="color:var(--text-muted);font-size:.84rem;margin:0 0 18px"></p>
+        <p style="color:var(--text-dim);font-size:.8rem;margin:0 0 14px">Presente aumenta erogate e presenziate. Assente aumenta solo erogate. Annullata/non svolta non cambia i totali.</p>
+        <label class="form-group"><span>Esito</span>
+          <select id="lessonStatusSelect" class="input-field">
+            <option value="pending">Da regolarizzare</option>
+            <option value="present">Presente</option>
+            <option value="absent">Assente</option>
+            <option value="cancelled">Annullata / non svolta</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeLessonStatusModal()">Chiudi</button>
+        <button type="button" class="btn btn-primary" id="saveLessonStatusButton" onclick="saveLessonStatus()">Salva esito</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Aggiungi / Modifica Corso -->
+  <div class="modal-overlay" id="courseModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="courseModalTitle">Aggiungi Nuovo Insegnamento</div>
+        <button class="modal-close" onclick="closeCourseModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="courseForm" onsubmit="handleSaveCourse(event)">
+          <input type="hidden" id="courseEditIndex" value="-1">
+
+          <div class="form-group">
+            <label>Denominazione Insegnamento</label>
+            <input type="text" class="input-field" id="courseNameInput" required placeholder="es. BIOCHIMICA E BIOLOGIA MOLECOLARE">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label>Totale lezioni previste</label>
+              <input type="number" class="input-field" id="courseTotalInput" min="1" required placeholder="es. 30">
+            </div>
+
+            <div class="form-group">
+              <label>Soglia Minima Obbligatoria (%)</label>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="number" class="input-field" id="courseMinPctInput" min="1" max="100" value="65" readonly required style="background: rgba(255,255,255,0.04); color: #93c5fd; font-weight: 700; cursor: not-allowed;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnUnlockMinPct" onclick="toggleMinPctUnlock()" style="white-space: nowrap; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa; font-weight: 700; padding: 9px 12px;" title="Clicca per modificare la soglia percentuale (es. per tirocini o laboratori)">
+                  ✏️ Modifica
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label>Lezioni Già Erogate</label>
+              <input type="number" class="input-field" id="courseDoneInput" min="0" value="0" required>
+            </div>
+
+            <div class="form-group">
+              <label>Lezioni Presenziate</label>
+              <input type="number" class="input-field" id="courseAttendedInput" min="0" value="0" required>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 10px; padding: 14px 0 0 0; background: transparent;">
+            <button type="button" class="btn btn-secondary" onclick="closeCourseModal()">Annulla</button>
+            <button type="submit" class="btn btn-primary">Salva Corso</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Importazione Rapida iCatt -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">Importa Frequenze da iCatt</div>
+        <button class="modal-close" onclick="closeImportModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="step-instruction-box">
+          <strong>Come fare:</strong>
+          <ol>
+            <li>Entra su <strong>iCatt</strong> nella sezione <strong>Frequenze</strong>.</li>
+            <li>Seleziona col mouse l'intera tabella con tutti i corsi e fai <strong>Copia</strong>.</li>
+            <li>Incolla qui sotto e premi "Avvia Importazione".</li>
+          </ol>
+        </div>
+
+        <div class="form-group">
+          <label>Testo copiato da iCatt</label>
+          <textarea class="input-field" id="modalImportText" placeholder="FV0123 NOME CORSO..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Annulla</button>
+        <button type="button" class="btn btn-primary" onclick="executeIcatImport()">Importa Corsi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifica -->
+  <div class="toast" id="appToast">
+    <span id="toastMessage">Operazione completata con successo</span>
+  </div>
+
+<script>
+/**
+ * UniPresenze 2.0 - Core Application Logic
+ */
+
+let currentUser = null;
+let authToken = localStorage.getItem('unipresenze_token') || null;
+let appCourses = [];
+let displayCourses = [];
+let isSimulatorActive = false;
+let countedIcsEvents = [];
+let lessonCatalog = {events:[]};
+let lessonCatalogEvents = [];
+let lessonCatalogVisibleEvents = [];
+let lessonResponses = {};
+let showArchivedLessons = false;
+let attendedIcsEvents = [];
+let dismissedAttendanceReminderKey = null;
+let autoSyncTimeout = null;
+const APP_VERSION = '2026.11.18-1';
+let refreshing = false;
+let swRegistration = null;
+let swUpdateTimer = null;
+
+async function checkForAppVersionUpdate(serverVersion) {
+  if (!serverVersion) return;
+  const storedVersion = localStorage.getItem('unipresenze_app_version');
+  const versionMismatch = serverVersion !== APP_VERSION || storedVersion !== serverVersion;
+  localStorage.setItem('unipresenze_app_version', serverVersion);
+  if (!versionMismatch) return;
+  const reloadGuardKey = `unipresenze_version_reload_${serverVersion}`;
+  if (sessionStorage.getItem(reloadGuardKey)) return;
+  sessionStorage.setItem(reloadGuardKey, '1');
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+  } catch (error) { console.warn('Could not clear outdated app caches:', error); }
+  window.location.reload();
+}
+
+function watchServiceWorkerRegistration(registration) {
+  swRegistration = registration;
+  if (!swUpdateTimer) swUpdateTimer = window.setInterval(() => {
+    if (swRegistration && document.visibilityState === 'visible') swRegistration.update().catch(() => {});
+  }, 5 * 60 * 1000);
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && swRegistration) swRegistration.update().catch(() => {});
+  });
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  showAuthScreen();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-v8.js').then(reg => { watchServiceWorkerRegistration(reg); return reg.update().catch(() => {}); }).catch(err => console.warn('SW registration failed:', err));
+  }
+  if (authToken) {
+    Promise.race([
+      fetchUserData(),
+      new Promise(resolve => setTimeout(() => resolve(false), 8000))
+    ]).then(verified => { if (!verified) showAuthScreen(); }).catch(err => {
+      console.error('App startup failed:', err);
+      showAuthScreen();
+    });
+  }
+});
+
+window.addEventListener('pageshow', event => {
+  if (event.persisted && authToken && !currentUser) {
+    fetchUserData().then(ok => { if (!ok) showAuthScreen(); }).catch(() => showAuthScreen());
+  }
+});
+
+/* ==========================================================================
+   1. GESTIONE AUTENTICAZIONE & HEADER
+   ========================================================================== */
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('appToast');
+  const msgEl = document.getElementById('toastMessage');
+  msgEl.textContent = message;
+  toast.className = `toast show ${type === 'error' ? 'toast-error' : 'toast-success'}`;
+  setTimeout(() => {
+    toast.className = 'toast';
+  }, 3200);
+}
+
+function updateSyncIndicator(state) {
+  const container = document.getElementById('syncIndicator');
+  if (!container) return;
+  if (state === 'saving') {
+    container.className = 'sync-status-pill saving';
+    container.innerHTML = '<span class="dot-indicator"></span> Sincronizzazione...';
+  } else if (state === 'saved') {
+    container.className = 'sync-status-pill saved';
+    container.innerHTML = '<span class="dot-indicator"></span> Salvato sul cloud ✓';
+  } else if (state === 'offline') {
+    container.className = 'sync-status-pill offline';
+    container.innerHTML = '<span class="dot-indicator"></span> Offline / Errore sync';
+  }
+}
+
+function switchAuthTab(tab) {
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const formLogin = document.getElementById('formLogin');
+  const formRegister = document.getElementById('formRegister');
+
+  if (tab === 'login') {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    formLogin.style.display = 'block';
+    formRegister.style.display = 'none';
+  } else {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    formLogin.style.display = 'none';
+    formRegister.style.display = 'block';
+  }
+}
+
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'block';
+  document.getElementById('wizardScreen').style.display = 'none';
+  document.getElementById('dashboardScreen').style.display = 'none';
+  renderHeaderNav(false);
+}
+
+function renderHeaderNav(isLoggedIn) {
+  const headerActions = document.getElementById('headerActions');
+  if (!isLoggedIn || !currentUser) {
+    headerActions.innerHTML = '';
+    return;
+  }
+
+  const initial = (currentUser.displayName || currentUser.username || 'U').charAt(0).toUpperCase();
+
+  headerActions.innerHTML = `
+    <div id="syncIndicator" class="sync-status-pill saved">
+      <span class="dot-indicator"></span> Salvato sul cloud ✓
+    </div>
+    <div class="user-profile-badge" onclick="openProfileModal()" title="Gestione Profilo & Impostazioni">
+      <div class="user-avatar">${initial}</div>
+      <span style="font-weight: 600;">${escapeHtml(currentUser.displayName || currentUser.username)}</span>
+      <span style="font-size: 0.7rem; color: var(--text-dim);">⚙️</span>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="handleLogout()" title="Disconnettiti">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Esci
+    </button>
+  `;
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const res = await fetch('api.php?action=login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      authToken = data.token;
+      localStorage.setItem('unipresenze_token', authToken);
+      currentUser = data.user;
+      countedIcsEvents = Array.isArray(data.user.counted_ics_events) ? data.user.counted_ics_events : [];
+      lessonResponses = data.user.lesson_responses && typeof data.user.lesson_responses === 'object' ? data.user.lesson_responses : {};
+      localStorage.setItem('unipresenze_counted_ics_events', JSON.stringify(countedIcsEvents));
+      appCourses = data.user.courses || [];
+
+      showToast('Accesso effettuato con successo!');
+      if (currentUser.isNewUser || appCourses.length === 0) {
+        startOnboardingWizard();
+      } else {
+        openDashboard();
+      }
+    } else {
+      showToast(data.message || 'Credenziali errate', 'error');
+    }
+  } catch (err) {
+    showToast('Errore di connessione al server', 'error');
+  }
+}
+
+async function handleRegisterSubmit(event) {
+  event.preventDefault();
+  const displayName = document.getElementById('regDisplayName').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+
+  try {
+    const res = await fetch('api.php?action=register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ displayName, username, password })
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      authToken = data.token;
+      localStorage.setItem('unipresenze_token', authToken);
+      currentUser = data.user;
+      countedIcsEvents = Array.isArray(data.user.counted_ics_events) ? data.user.counted_ics_events : [];
+      lessonResponses = {};
+      localStorage.setItem('unipresenze_counted_ics_events', JSON.stringify(countedIcsEvents));
+      attendedIcsEvents = [];
+      appCourses = [];
+      showToast('Registrazione avvenuta con successo!');
+      startOnboardingWizard();
+    } else {
+      showToast(data.message || 'Errore durante la registrazione', 'error');
+    }
+  } catch (err) {
+    showToast('Impossibile contattare il server per la registrazione', 'error');
+  }
+}
+
+async function handleLogout() {
+  if (confirm('Sei sicuro di voler effettuare il logout?')) {
+    try {
+      await fetch('api.php?action=logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+    } catch (e) {}
+
+    localStorage.removeItem('unipresenze_token');
+    authToken = null;
+    currentUser = null;
+    appCourses = [];
+    displayCourses = [];
+    attendedIcsEvents = [];
+    lessonResponses = {};
+    showToast('Disconnesso con successo');
+    showAuthScreen();
+  }
+}
+
+async function fetchUserData() {
+  try {
+    const res = await fetch('api.php?action=get_data', {
+      headers: { 'Authorization': `Bearer ${authToken}` },
+      cache: 'no-store'
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('unipresenze_token');
+      authToken = null;
+      return false;
+    }
+    const data = await res.json();
+    if (data.app_version) checkForAppVersionUpdate(data.app_version);
+    if (data.status === 'success') {
+      currentUser = data.user;
+      countedIcsEvents = Array.isArray(data.user.counted_ics_events) ? data.user.counted_ics_events : [];
+      lessonResponses = data.user.lesson_responses && typeof data.user.lesson_responses === 'object' ? data.user.lesson_responses : {};
+      localStorage.setItem('unipresenze_counted_ics_events', JSON.stringify(countedIcsEvents));
+      appCourses = data.user.courses || [];
+
+      if (currentUser.isNewUser || appCourses.length === 0) {
+        startOnboardingWizard();
+      } else {
+        openDashboard();
+      }
+      return true;
+    }
+  } catch (err) {
+    console.error('Fetch user data failed:', err);
+  }
+  return false;
+}
+
+/* ==========================================================================
+   2. SINCRONIZZAZIONE AUTOMATICA SERVER
+   ========================================================================== */
+
+function triggerAutoSave() {
+  if (isSimulatorActive) return;
+  updateSyncIndicator('saving');
+
+  clearTimeout(autoSyncTimeout);
+  autoSyncTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch('api.php?action=save_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          courses: appCourses,
+          settings: currentUser ? currentUser.settings : {},
+          counted_ics_events: countedIcsEvents,
+          attended_ics_events: attendedIcsEvents,
+          lesson_responses: lessonResponses
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        updateSyncIndicator('saved');
+      } else {
+        updateSyncIndicator('offline');
+      }
+    } catch (err) {
+      updateSyncIndicator('offline');
+    }
+  }, 400);
+}
+
+/* ==========================================================================
+   3. ONBOARDING / WIZARD
+   ========================================================================== */
+
+function startOnboardingWizard() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('wizardScreen').style.display = 'block';
+  document.getElementById('dashboardScreen').style.display = 'none';
+  renderHeaderNav(true);
+  goToWizardStep(1);
+}
+
+function goToWizardStep(stepNum) {
+  [1, 2, 3].forEach(n => {
+    const stepEl = document.getElementById(`wizardStep${n}`);
+    const nodeEl = document.getElementById(`wizardNode${n}`);
+    if (n === stepNum) {
+      stepEl.classList.add('active');
+      nodeEl.classList.add('active');
+    } else {
+      stepEl.classList.remove('active');
+      nodeEl.classList.remove('active');
+      if (n < stepNum) nodeEl.classList.add('done');
+      else nodeEl.classList.remove('done');
+    }
+  });
+}
+
+function processWizardImport() {
+  const text = document.getElementById('wizardImportText').value.trim();
+  if (!text) {
+    alert('Incolla il testo copiato da iCatt per continuare, oppure premi "Salta per ora".');
+    return;
+  }
+  const parsed = parseIcatText(text);
+  if (parsed.length > 0) {
+    appCourses = parsed;
+    showToast(`Rilevati ${parsed.length} insegnamenti da iCatt!`);
+    goToWizardStep(3);
+  } else {
+    alert('Nessun corso riconosciuto nel testo. Assicurati di copiare la tabella completa con i codici FV...');
+  }
+}
+
+async function completeWizardSetup() {
+  triggerAutoSave();
+  showToast('Setup completato! Benvenuto nella tua Dashboard.');
+  openDashboard();
+}
+
+function openDashboard() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('wizardScreen').style.display = 'none';
+  document.getElementById('dashboardScreen').style.display = 'block';
+  renderHeaderNav(true);
+
+  displayCourses = JSON.parse(JSON.stringify(appCourses));
+  renderCoursesGrid();
+  dismissedAttendanceReminderKey = null;
+  loadLessonCatalog();
+  // Restore this device's already-authorized subscription after login/reopen.
+  syncCurrentDevicePushSubscription();
+}
+
+/* ==========================================================================
+   4. LOGICA CORSI & REDESIGN GRAFICO ASSENZE
+   ========================================================================== */
+
+function toggleCallout(id) {
+  const body = document.getElementById(id);
+  const icon = document.getElementById(id + 'Icon');
+  if (body.classList.contains('open')) {
+    body.classList.remove('open');
+    icon.textContent = 'Mostra info ▼';
+  } else {
+    body.classList.add('open');
+    icon.textContent = 'Nascondi ▲';
+  }
+}
+
+function toggleSimulator(isActive) {
+  isSimulatorActive = isActive;
+  const label = document.getElementById('simStatusLabel');
+  if (isActive) {
+    label.textContent = 'SIMULAZIONE ATTIVA ⚡';
+    label.style.color = '#ef4444';
+    displayCourses = JSON.parse(JSON.stringify(appCourses));
+    showToast('Modalità Simulatore attiva: le modifiche non saranno salvate', 'warning');
+  } else {
+    label.textContent = 'Disattivato';
+    label.style.color = '#fbbf24';
+    displayCourses = JSON.parse(JSON.stringify(appCourses));
+    showToast('Modalità Simulatore disattivata: dati reali ripristinati.');
+  }
+  renderCoursesGrid();
+}
+
+function computeCourseMetrics(c) {
+  const total = Number(c.total) || 1;
+  const done = Math.max(0, Number(c.done) || 0);
+  const attended = Math.max(0, Number(c.attended) || 0);
+  const minPct = Number(c.minPct) || 65;
+
+  const currentPct = done > 0 ? (attended / done) * 100 : 100;
+  const minRequiredPresences = Math.ceil(total * (minPct / 100));
+  const maxAbsencesAllowed = Math.max(0, total - minRequiredPresences);
+  const currentAbsences = Math.max(0, done - attended);
+  const remainingAbsences = maxAbsencesAllowed - currentAbsences;
+
+  let status = 'ok';
+  if (remainingAbsences < 0) {
+    status = 'danger';
+  } else if (remainingAbsences <= 2) {
+    status = 'warning';
+  }
+
+  return {
+    total,
+    done,
+    attended,
+    minPct,
+    currentPct,
+    minRequiredPresences,
+    maxAbsencesAllowed,
+    currentAbsences,
+    remainingAbsences,
+    status
+  };
+}
+
+function renderCoursesGrid() {
+  const container = document.getElementById('coursesContainer');
+  if (!container) return;
+
+  if (displayCourses.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <h3>Nessun corso presente</h3>
+        <p>Inizia aggiungendo il tuo primo insegnamento oppure importa l'elenco completo da iCatt.</p>
+        <button class="btn btn-primary" onclick="openAddCourseModal()">Aggiungi Corso Manuale</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = displayCourses.map((c, index) => {
+    const m = computeCourseMetrics(c);
+    const pctFormatted = m.currentPct.toFixed(1);
+
+    let badgeClass = 'badge-ok';
+    let badgeText = 'IN REGOLA';
+    let pillClass = 'absence-pill-ok';
+    let barColor = '#10b981';
+
+    if (m.status === 'warning') {
+      badgeClass = 'badge-warning';
+      badgeText = 'ATTENZIONE';
+      pillClass = 'absence-pill-warning';
+      barColor = '#f59e0b';
+    } else if (m.status === 'danger') {
+      badgeClass = 'badge-danger';
+      badgeText = 'SOGLIA SUPERATA';
+      pillClass = 'absence-pill-danger';
+      barColor = '#ef4444';
+    }
+
+    // Calcolo barra assenze consumate vs consentite
+    const absenceUsagePct = m.maxAbsencesAllowed > 0
+      ? Math.min(100, Math.round((m.currentAbsences / m.maxAbsencesAllowed) * 100))
+      : (m.currentAbsences > 0 ? 100 : 0);
+
+    const icsSyncedTag = c.isIcsSynced ? `<span class="ics-synced-pill">⚡ Sincronizzato col calendario</span>` : '';
+
+    return `
+      <div class="course-card status-${m.status}">
+        <div>
+          <div class="card-top">
+            <div class="course-name">${escapeHtml(c.name)}</div>
+            <span class="course-badge ${badgeClass}">${badgeText}</span>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-item">
+              <span class="metric-val">${m.total}</span>
+              <span class="metric-label">Totali</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val" style="color: ${m.status === 'danger' ? '#f87171' : '#34d399'};">${pctFormatted}%</span>
+              <span class="metric-label">Presenze</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-val">${m.minPct}%</span>
+              <span class="metric-label">Soglia Min</span>
+            </div>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-labels">
+              <span style="color: var(--text-muted);">Avanzamento corso:</span>
+              <span style="font-weight: 600;">${m.done}/${m.total} lezioni (${Math.round((m.done/m.total)*100)}%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${Math.min(100, Math.round((m.done/m.total)*100))}%; background: linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
+            </div>
+          </div>
+
+          <!-- Elemento Grafico Assenze Residue -->
+          <div class="absence-tracker-card">
+            <div class="absence-tracker-top">
+              <span class="absence-tracker-label">Margine Assenze:</span>
+              <span class="absence-badge-pill ${pillClass}">
+                <span>${m.remainingAbsences >= 0 ? m.remainingAbsences : 0}</span>
+                <span style="font-size: 0.7rem; font-weight: 500; opacity: 0.85;">/ ${m.maxAbsencesAllowed} residue</span>
+              </span>
+            </div>
+            <div class="absence-bar-track">
+              <div class="absence-bar-fill" style="width: ${absenceUsagePct}%; background: ${barColor};"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="steppers-row">
+            <div class="stepper-unit">
+              <div class="stepper-label">
+                <span>Erogate ${icsSyncedTag}</span>
+              </div>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn" onclick="adjustCourseValue(${index}, 'done', -1)">-</button>
+                <span class="stepper-val">${m.done}</span>
+                <button type="button" class="stepper-btn" onclick="adjustCourseValue(${index}, 'done', 1)">+</button>
+              </div>
+            </div>
+
+            <div class="stepper-unit">
+              <div class="stepper-label">
+                <span>Presenze</span>
+              </div>
+              <div class="stepper-controls">
+                <button type="button" class="stepper-btn" onclick="adjustCourseValue(${index}, 'attended', -1)">-</button>
+                <span class="stepper-val">${m.attended}</span>
+                <button type="button" class="stepper-btn" onclick="adjustCourseValue(${index}, 'attended', 1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openEditCourseModal(${index})" title="Modifica parametri corso">
+              Modifica
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="removeCourse(${index})" title="Elimina corso">
+              Rimuovi
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function adjustCourseValue(index, field, delta) {
+  const targetArray = isSimulatorActive ? displayCourses : appCourses;
+  if (!targetArray[index]) return;
+
+  const currentVal = Number(targetArray[index][field]) || 0;
+  const newVal = Math.max(0, currentVal + delta);
+  targetArray[index][field] = newVal;
+
+  if (field === 'done' && targetArray[index].attended > newVal) {
+    targetArray[index].attended = newVal;
+  }
+  if (field === 'attended' && newVal > targetArray[index].done) {
+    targetArray[index].done = newVal;
+  }
+
+  if (field === 'done') {
+    targetArray[index].isIcsSynced = false;
+  }
+
+  if (isSimulatorActive) {
+    renderCoursesGrid();
+  } else {
+    displayCourses = JSON.parse(JSON.stringify(appCourses));
+    renderCoursesGrid();
+    triggerAutoSave();
+  }
+}
+
+/* ==========================================================================
+   5. PARSING E REGISTRO CALENDARIO (lezioni.ics con raggruppamento per giorno)
+   ========================================================================== */
+
+async function loadLessonCatalog() {
+  const container = document.getElementById('lessonEventsList');
+  if (container) container.innerHTML = '<p style="text-align:center;color:var(--accent);padding:14px">Caricamento registro lezioni...</p>';
+  try {
+    const response = await fetch('lessons_catalog.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const catalog = await response.json();
+    if (!catalog || !Array.isArray(catalog.events)) throw new Error('Catalogo lezioni non valido');
+    lessonCatalog = catalog;
+    lessonCatalogEvents = catalog.events;
+    renderCalendarEventsList(lessonCatalogEvents);
+  } catch (error) {
+    if (container) container.innerHTML = `<div style="text-align:center;color:var(--danger);font-size:.85rem;padding:12px">Impossibile caricare il registro (${escapeHtml(error.message)}).</div>`;
+  }
+}
+
+function getLessonResponse(event) {
+  const response = lessonResponses && lessonResponses[event.id];
+  if (response && typeof response === 'object' && response.status) return response.status;
+  if (typeof response === 'string') return response;
+  const trackingSince = lessonCatalog && lessonCatalog.tracking_since ? new Date(lessonCatalog.tracking_since) : null;
+  return trackingSince && new Date(event.start) < trackingSince ? 'legacy' : 'pending';
+}
+function getPendingLessons(now = new Date()) {
+  return lessonCatalogEvents.filter(event => new Date(event.start) <= now && getLessonResponse(event) === 'pending' && !!getMatchingCourseForEvent({courseName:event.course, summary:event.title}));
+}
+function renderCalendarEventsList(events) {
+  const container = document.getElementById('lessonEventsList');
+  const summary = document.getElementById('lessonPendingSummary');
+  if (!container) return;
+  const now = new Date();
+  const horizon = new Date(now.getTime() + 60 * 86400000);
+  const visible = events.filter(event => {
+    const start = new Date(event.start);
+    const response = getLessonResponse(event);
+    const belongsToUser = !!getMatchingCourseForEvent({courseName:event.course,summary:event.title});
+    return belongsToUser && ((start <= now && (response === 'pending' || (showArchivedLessons && response !== 'legacy'))) || (start > now && start <= horizon));
+  }).sort((a,b) => new Date(a.start)-new Date(b.start));
+  lessonCatalogVisibleEvents = visible;
+  const pending = getPendingLessons(now);
+  if (summary) summary.innerHTML = pending.length
+    ? `<strong style="color:#fbbf24">${pending.length} ${pending.length === 1 ? 'lezione da regolarizzare' : 'lezioni da regolarizzare'}</strong> · le lezioni senza risposta restano qui anche nei prossimi giorni.`
+    : '<span style="color:var(--success)">Nessuna lezione passata da regolarizzare.</span>';
+  if (!visible.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:14px">Nessuna lezione nel periodo mostrato.</p>';
+    return;
+  }
+  let html = '';
+  let dayHeader = '';
+  visible.forEach((event,index) => {
+    const start = new Date(event.start);
+    const end = new Date(event.end);
+    const day = start.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    if (day !== dayHeader) { dayHeader = day; html += `<div class="day-separator">📅 ${escapeHtml(day)}</div>`; }
+    const status = getLessonResponse(event);
+    const labels = {pending:(start > now ? 'Da svolgere' : 'Da regolarizzare'),present:'Presente',absent:'Assente',cancelled:'Annullata / non svolta',legacy:'Storico precedente'};
+    const badgeClass = status === 'pending' ? 'upcoming' : (status === 'absent' ? '' : 'passed');
+    const canEdit = start <= now && status !== 'legacy';
+    const time = `${start.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}–${end.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;
+    const statusLabel = event.suspended && status === 'pending' ? 'Sospesa · da verificare' : (labels[status] || (start > now ? 'Da svolgere' : 'Da regolarizzare'));
+    html += `<button type="button" class="ics-event-row ${event.suspended?'suspended':''}" style="width:100%;text-align:left;cursor:${canEdit?'pointer':'default'}" ${canEdit?`onclick="openLessonStatusModal(${index})"`:''}>
+      <span class="ics-event-info"><span class="ics-event-title">${escapeHtml(event.course || event.title)}</span><span class="ics-event-sub">${event.location?'📍 '+escapeHtml(event.location)+' · ':''}🕒 ${time}${event.source_present===false?' · non più nel calendario sorgente':''}</span></span>
+      <span class="ics-event-badge ${badgeClass}">${escapeHtml(statusLabel)}</span></button>`;
+  });
+  container.innerHTML = html;
+}
+function toggleLessonArchive() {
+  showArchivedLessons = !showArchivedLessons;
+  const button = document.getElementById('lessonArchiveToggle');
+  if (button) button.textContent = showArchivedLessons ? 'Nascondi regolarizzate' : 'Mostra regolarizzate';
+  renderCalendarEventsList(lessonCatalogEvents);
+}
+function openLessonStatusModal(index) {
+  const event = lessonCatalogVisibleEvents[index];
+  if (!event) return;
+  const course = getMatchingCourseForEvent({courseName:event.course,summary:event.title});
+  if (!course) { showToast('La materia non corrisponde a un corso del profilo.', 'warning'); return; }
+  const start = new Date(event.start), end = new Date(event.end);
+  document.getElementById('lessonModalTitle').textContent = event.course || event.title;
+  document.getElementById('lessonModalDetails').textContent = `${start.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} · ${start.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}–${end.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}${event.location?' · '+event.location:''}`;
+  document.getElementById('lessonStatusSelect').value = getLessonResponse(event) === 'legacy' ? 'pending' : getLessonResponse(event);
+  document.getElementById('lessonStatusModal').dataset.eventId = event.id;
+  document.getElementById('lessonStatusModal').style.display = 'flex';
+}
+function closeLessonStatusModal() { document.getElementById('lessonStatusModal').style.display = 'none'; }
+function lessonContribution(status) { return status === 'present' ? [1,1] : (status === 'absent' ? [1,0] : [0,0]); }
+async function saveLessonStatus() {
+  const modal = document.getElementById('lessonStatusModal');
+  const event = lessonCatalogEvents.find(item => item.id === modal.dataset.eventId);
+  if (!event) return;
+  const course = getMatchingCourseForEvent({courseName:event.course,summary:event.title});
+  if (!course) return;
+  const status = document.getElementById('lessonStatusSelect').value;
+  const previous = getLessonResponse(event);
+  const oldContribution = lessonContribution(previous === 'legacy' ? 'pending' : previous);
+  const newContribution = lessonContribution(status);
+  course.done = Math.max(0,(Number(course.done)||0)+newContribution[0]-oldContribution[0]);
+  course.attended = Math.max(0,(Number(course.attended)||0)+newContribution[1]-oldContribution[1]);
+  lessonResponses[event.id] = {status,course_name:course.name,date:event.date,updated_at:new Date().toISOString()};
+  renderCoursesGrid();
+  renderHeaderNav(true);
+  renderCalendarEventsList(lessonCatalogEvents);
+  closeLessonStatusModal();
+  updateSyncIndicator('saving');
+  try {
+    const response = await fetch('api.php?action=save_data',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},body:JSON.stringify({courses:appCourses,settings:currentUser?currentUser.settings:{},counted_ics_events:countedIcsEvents,attended_ics_events:attendedIcsEvents,lesson_responses:lessonResponses})});
+    const result = await response.json();
+    if (result.status !== 'success') throw new Error(result.message || 'Salvataggio non riuscito');
+    updateSyncIndicator('saved');
+    showToast(status === 'pending' ? 'Lezione rimessa tra quelle da registrare.' : 'Esito salvato sul profilo.');
+  } catch (error) {
+    updateSyncIndicator('offline');
+    triggerAutoSave();
+    showToast('Esito conservato su questo dispositivo; sincronizzazione server non riuscita.', 'warning');
+  }
+}
+
+function eventMatchesCourse(ev, course) {
+  if (ev.courseName) {
+    const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('it-IT');
+    const subject = normalize(ev.courseName);
+    const courseName = normalize(course.name);
+    return subject === courseName || subject.includes(courseName) || courseName.includes(subject);
+  }
+  const words = String(course.name || '').toLowerCase().split(/\s+/).filter(w => w.length > 3 && !w.startsWith('fv'));
+  const summaryLower = String(ev.summary || '').toLowerCase();
+  return words.length > 0 && words.some(w => summaryLower.includes(w));
+}
+
+function getMatchingCourseForEvent(event) {
+  if (!event || !Array.isArray(appCourses)) return null;
+  const candidates = [event.courseName, event.course, event.title, event.summary]
+    .map(value => String(value || '').trim())
+    .filter(Boolean);
+  return appCourses.find(course =>
+    candidates.some(candidate => eventMatchesCourse({courseName: candidate, summary: candidate}, course))
+  ) || null;
+}
+
+/* ==========================================================================
+   6. MODAL GESTIONE PROFILO, IMPOSTAZIONI & WEB PUSH
+   ========================================================================== */
+
+let currentPushSubscription = null;
+
+function isPwaStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
+function isIosDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+let currentPushDeviceId = null;
+
+function getPushDeviceDescriptor() {
+  const ua = navigator.userAgent || '';
+  const platformRaw = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  const platform = /iPhone|iPad|iPod/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : /Win/i.test(platformRaw) ? 'Windows' : /Mac/i.test(platformRaw) ? 'macOS' : /Linux/i.test(platformRaw) ? 'Linux' : 'Dispositivo';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const label = platform === 'iOS' ? (/iPad/i.test(ua) ? 'iPad' : 'iPhone') : platform;
+  return { name: `${browser} · ${label}`, browser, platform };
+}
+
+async function getPushDeviceId(endpoint) {
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(endpoint));
+  return Array.from(new Uint8Array(bytes)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
+function renderPushDevices() {
+  const container = document.getElementById('pushDevicesList');
+  if (!container) return;
+  const devices = currentUser && Array.isArray(currentUser.push_devices) ? currentUser.push_devices : [];
+  if (!devices.length) {
+    container.innerHTML = '<div style="padding:12px;border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:.82rem">Nessun dispositivo registrato. Attiva le notifiche su questo dispositivo per aggiungerlo.</div>';
+    return;
+  }
+  container.innerHTML = `<div style="font-size:.82rem;font-weight:700;color:#93c5fd;margin:8px 0">DISPOSITIVI REGISTRATI (${devices.length})</div>` + devices.map(device => {
+    const prefs = device.notification_settings || {};
+    const current = device.id === currentPushDeviceId;
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:9px;background:#0d131f">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
+        <div><div style="font-weight:700;color:white;font-size:.88rem">${escapeHtml(device.name || 'Dispositivo')}</div><div style="font-size:.72rem;color:var(--text-muted)">${current ? 'Questo dispositivo · ' : ''}${device.last_seen ? 'Ultimo aggiornamento: ' + escapeHtml(new Date(device.last_seen).toLocaleDateString('it-IT')) : 'Registrazione precedente'} · ID ${escapeHtml(device.id.slice(-4))}</div>${device.last_receipt ? `<div style="font-size:.72rem;color:#a7f3d0;margin-top:3px">Ultimo avviso: ${{received:'push ricevuto dal worker',shown:'richiesta di notifica completata',show_error:'errore nel mostrare la notifica'}[device.last_receipt.stage] || escapeHtml(device.last_receipt.stage)} · ${escapeHtml(new Date(device.last_receipt.received_at).toLocaleTimeString('it-IT'))}${device.last_receipt.error ? ' · ' + escapeHtml(device.last_receipt.error) : ''}</div>` : ''}</div></div>
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deletePushDevice('${device.id}')">Rimuovi</button>
+      </div>
+      <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:.8rem;color:#e2e8f0">Avviso all’inizio lezione <input type="checkbox" id="pushStart_${device.id}" ${prefs.notify_attendance_start ? 'checked' : ''}></label>
+      <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:.8rem;color:#e2e8f0">Promemoria serale <input type="checkbox" id="pushPending_${device.id}" ${prefs.notify_evening === true ? 'checked' : ''}></label>
+      <label style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:.8rem;color:#e2e8f0">Anticipo <select id="pushMinutes_${device.id}" class="input-field" style="width:auto;padding:5px 8px;font-size:.8rem">${[10,15,30,45,60].map(m => `<option value="${m}" ${Number(prefs.pre_lecture_minutes) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label>
+      <div style="font-size:.72rem;color:var(--text-dim);margin-top:8px">Le scelte sopra valgono solo per ${escapeHtml(device.name || 'questo dispositivo')}.</div>
+      <button type="button" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px" onclick="savePushDeviceSettings('${device.id}')">Salva su questo dispositivo</button>
+    </div>`;
+  }).join('');
+}
+
+async function updatePushDevicesFromResponse(data) {
+  if (data && Array.isArray(data.push_devices) && currentUser) {
+    currentUser.push_devices = data.push_devices;
+    if (currentPushSubscription) currentPushDeviceId = await getPushDeviceId(currentPushSubscription.endpoint);
+    renderPushDevices();
+  }
+}
+
+async function savePushDeviceSettings(deviceId) {
+  const payload = {
+    device_id: deviceId,
+    notification_settings: {
+      notify_attendance_start: document.getElementById(`pushStart_${deviceId}`).checked,
+      notify_pre_lecture: document.getElementById(`pushPre_${deviceId}`).checked,
+      notify_evening: document.getElementById(`pushPending_${deviceId}`).checked,
+      pre_lecture_minutes: Number(document.getElementById(`pushMinutes_${deviceId}`).value)
+    }
+  };
+  try {
+    const response = await fetch('api.php?action=update_push_device', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify(payload) });
+    const data = await response.json();
+    if (data.status === 'success') { await updatePushDevicesFromResponse(data); showToast(data.message || 'Preferenze salvate'); }
+    else showToast(data.message || 'Impossibile salvare le preferenze', 'error');
+  } catch (error) { showToast('Errore di connessione', 'error'); }
+}
+
+async function deletePushDevice(deviceId) {
+  const device = (currentUser.push_devices || []).find(item => item.id === deviceId);
+  if (!device || !confirm(`Rimuovere ${device.name} dall’elenco? Non riceverà più notifiche.`)) return;
+  try {
+    const response = await fetch('api.php?action=delete_push_device', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify({ device_id: deviceId }) });
+    const data = await response.json();
+    if (data.status === 'success') { await updatePushDevicesFromResponse(data); showToast(data.message || 'Dispositivo rimosso'); }
+    else showToast(data.message || 'Impossibile rimuovere il dispositivo', 'error');
+  } catch (error) { showToast('Errore di connessione', 'error'); }
+}
+
+async function syncCurrentDevicePushSubscription() {
+  if (!authToken || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) await syncPushSubscriptionWithServer(subscription);
+  } catch (error) {
+    console.warn('Could not restore this device push subscription:', error);
+  }
+}
+
+async function syncPushSubscriptionWithServer(subscription) {
+  if (!subscription || !authToken) return;
+  try {
+    const response = await fetch('api.php?action=save_push_subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ subscription: subscription.toJSON(), device: getPushDeviceDescriptor(), reactivate: false })
+    });
+    const result = await response.json();
+    if (result.status === 'success') {
+      await updatePushDevicesFromResponse(result);
+      return result;
+    }
+    console.warn('Push subscription sync failed:', result.message);
+    return result;
+  } catch (error) {
+    console.warn('Push subscription sync failed:', error);
+  }
+}
+
+async function checkPushStatus() {
+  const badge = document.getElementById('pushStatusBadge');
+  const btnSub = document.getElementById('btnSubscribePush');
+  const btnTest = document.getElementById('btnTestPush');
+  const btnUnsub = document.getElementById('btnUnsubscribePush');
+  const iosWarning = document.getElementById('pwaInstallWarning');
+
+  if (isIosDevice() && !isPwaStandalone()) {
+    if (iosWarning) iosWarning.style.display = 'block';
+  } else {
+    if (iosWarning) iosWarning.style.display = 'none';
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (badge) {
+      badge.textContent = 'Non supportate dal browser';
+      badge.className = 'course-badge badge-danger';
+    }
+    if (btnSub) btnSub.disabled = true;
+    if (btnTest) btnTest.disabled = true;
+    if (btnUnsub) btnUnsub.disabled = true;
+    return;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+      const sub = await reg.pushManager.getSubscription();
+      currentPushSubscription = sub;
+
+      if (sub) {
+        // Re-register this browser/device on the server; other devices remain subscribed.
+        currentPushDeviceId = await getPushDeviceId(sub.endpoint);
+        const syncResult = await syncPushSubscriptionWithServer(sub);
+        renderPushDevices();
+        if (syncResult && syncResult.disabled) {
+          if (badge) { badge.textContent = 'Rimosso dal profilo'; badge.className = 'course-badge badge-warning'; }
+          if (btnSub) { btnSub.disabled = false; btnSub.textContent = 'Riattiva su questo dispositivo'; }
+          if (btnTest) btnTest.disabled = true;
+          if (btnUnsub) btnUnsub.disabled = false;
+          return;
+        }
+        if (badge) {
+          badge.textContent = 'Attive ✓';
+          badge.className = 'course-badge badge-ok';
+        }
+        if (btnSub) {
+          btnSub.disabled = true;
+          btnSub.textContent = 'Notifiche Già Attive';
+        }
+        if (btnTest) btnTest.disabled = false;
+        if (btnUnsub) btnUnsub.disabled = false;
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Error checking push status:', e);
+  }
+
+  if (badge) {
+    badge.textContent = 'Non attive';
+    badge.className = 'course-badge badge-warning';
+  }
+  if (btnSub) {
+    btnSub.disabled = false;
+    btnSub.textContent = '🔔 Attiva Notifiche';
+  }
+  if (btnTest) btnTest.disabled = true;
+  if (btnUnsub) btnUnsub.disabled = true;
+}
+
+async function subscribeUserToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Il tuo browser non supporta le Web Push Notifications.');
+    return;
+  }
+
+  if (isIosDevice() && !isPwaStandalone()) {
+    alert('Su iOS è necessario installare la webapp prima di abilitare le notifiche: tocca Condividi e seleziona "Aggiungi alla schermata Home".');
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      showToast('Permesso notifiche negato nel browser', 'error');
+      return;
+    }
+
+    const reg = await navigator.serviceWorker.register('sw-v8.js');
+     watchServiceWorkerRegistration(reg);
+    await navigator.serviceWorker.ready;
+
+    // Recupera chiave pubblica VAPID dal backend
+    const vapidRes = await fetch('api.php?action=get_vapid_public_key');
+    const vapidData = await vapidRes.json();
+    if (vapidData.status !== 'success' || !vapidData.publicKey) {
+      throw new Error(vapidData.message || 'Chiave VAPID non disponibile');
+    }
+
+    const convertedVapidKey = urlBase64ToUint8Array(vapidData.publicKey);
+    let subscription = await reg.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+    }
+
+    currentPushSubscription = subscription;
+
+    // Salva sottoscrizione sul server associandola all'utente
+    const saveRes = await fetch('api.php?action=save_push_subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        subscription: subscription.toJSON(),
+        device: getPushDeviceDescriptor(),
+        reactivate: true,
+        settings: {
+          notify_attendance_start: document.getElementById('profileNotifyStart').checked,
+          notify_pre_lecture: document.getElementById('profileNotifyPre').checked,
+          pre_lecture_minutes: parseInt(document.getElementById('profilePreMinutes').value)
+        }
+      })
+    });
+
+    const saveData = await saveRes.json();
+    if (saveData.status === 'success') {
+      showToast('Notifiche push attivate con successo!');
+      await updatePushDevicesFromResponse(saveData);
+      checkPushStatus();
+    } else {
+      showToast(saveData.message || 'Errore salvataggio sottoscrizione', 'error');
+    }
+  } catch (err) {
+    console.error('Subscription error:', err);
+    showToast(`Errore attivazione notifiche: ${err.message}`, 'error');
+  }
+}
+
+async function sendTestPushNotification() {
+  const btn = document.getElementById('btnTestPush');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('api.php?action=send_test_push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showToast(data.message || 'Notifica di test inviata! Controlla il tuo dispositivo.');
+    } else {
+      showToast(data.message || 'Errore invio notifica di test', 'error');
+    }
+  } catch (err) {
+    showToast('Errore durante l\'invio del test push', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function unsubscribeUserFromPush() {
+  if (!confirm('Vuoi disattivare le notifiche push su questo dispositivo?')) return;
+
+  let sub = null;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg) {
+      sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+      }
+    }
+
+    await fetch('api.php?action=unsubscribe_push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ endpoint: sub ? sub.endpoint : '' })
+    });
+
+    currentPushSubscription = null;
+    showToast('Notifiche disattivate');
+    checkPushStatus();
+  } catch (err) {
+    showToast('Errore durante la disattivazione', 'error');
+  }
+}
+
+function openProfileModal() {
+  if (!currentUser) return;
+  document.getElementById('profileDisplayName').value = currentUser.displayName || '';
+  document.getElementById('profileUsername').value = currentUser.username || '';
+  document.getElementById('profileNewPassword').value = '';
+
+  const settings = currentUser.settings || {};
+  document.getElementById('profileNotifyStart').checked = settings.notify_attendance_start !== false;
+  document.getElementById('profileNotifyPre').checked = settings.notify_pre_lecture !== false;
+  document.getElementById('profilePreMinutes').value = settings.pre_lecture_minutes || '15';
+  document.getElementById('preMinutesWrapper').style.opacity = (settings.notify_pre_lecture !== false) ? '1' : '0.4';
+  document.getElementById('profilePendingReminderEnabled').checked = settings.pending_lesson_reminder_enabled !== false;
+  document.getElementById('profilePendingReminderTime').value = settings.pending_lesson_reminder_time || '18:00';
+  const reminderDays = Array.isArray(settings.pending_lesson_reminder_days) ? settings.pending_lesson_reminder_days.map(Number) : [1,2,3,4,5];
+  document.querySelectorAll('.pending-reminder-day').forEach(input => { input.checked = reminderDays.includes(Number(input.value)); });
+
+  document.getElementById('profileModal').style.display = 'flex';
+  renderPushDevices();
+  checkPushStatus();
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').style.display = 'none';
+}
+
+async function handleUpdateProfile(event) {
+  event.preventDefault();
+  const displayName = document.getElementById('profileDisplayName').value.trim();
+  const username = document.getElementById('profileUsername').value.trim();
+  const password = document.getElementById('profileNewPassword').value;
+  const notifyStart = document.getElementById('profileNotifyStart').checked;
+  const notifyPre = document.getElementById('profileNotifyPre').checked;
+  const preMinutes = parseInt(document.getElementById('profilePreMinutes').value);
+  const pendingReminderEnabled = document.getElementById('profilePendingReminderEnabled').checked;
+  const pendingReminderTime = document.getElementById('profilePendingReminderTime').value || '18:00';
+  const pendingReminderDays = [...document.querySelectorAll('.pending-reminder-day:checked')].map(input => Number(input.value));
+
+  try {
+    const res = await fetch('api.php?action=update_profile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        displayName,
+        username,
+        password: password || undefined,
+        settings: {
+          notify_attendance_start: notifyStart,
+          notify_pre_lecture: notifyPre,
+          pre_lecture_minutes: preMinutes,
+          pending_lesson_reminder_enabled: pendingReminderEnabled,
+          pending_lesson_reminder_time: pendingReminderTime,
+          pending_lesson_reminder_days: pendingReminderDays
+        }
+      })
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      if (data.token) {
+        authToken = data.token;
+        localStorage.setItem('unipresenze_token', authToken);
+      }
+      currentUser = data.user;
+      renderHeaderNav(true);
+      closeProfileModal();
+      showToast('Profilo e preferenze salvati con successo!');
+    } else {
+      showToast(data.message || 'Errore aggiornamento profilo', 'error');
+    }
+  } catch (err) {
+    showToast('Errore di connessione al server', 'error');
+  }
+}
+
+async function handleDeleteAccount() {
+  const confirm1 = confirm('Sei DAVVERO sicuro di voler eliminare definitivamente il tuo account? Tutti i tuoi dati andranno persi.');
+  if (!confirm1) return;
+
+  const confirm2 = prompt('Per confermare la cancellazione irreversibile, digita "ELIMINA":');
+  if (confirm2 !== 'ELIMINA') {
+    showToast('Operazione annullata', 'warning');
+    return;
+  }
+
+  try {
+    const res = await fetch('api.php?action=delete_account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+      localStorage.removeItem('unipresenze_token');
+      authToken = null;
+      currentUser = null;
+      appCourses = [];
+      displayCourses = [];
+      closeProfileModal();
+      showToast('Account eliminato definitivamente.');
+      showAuthScreen();
+    } else {
+      showToast(data.message || 'Errore eliminazione account', 'error');
+    }
+  } catch (err) {
+    showToast('Errore durante la cancellazione account', 'error');
+  }
+}
+
+/* ==========================================================================
+   7. MODAL GESTIONE CORSO
+   ========================================================================== */
+
+function setMinPctFieldLocked(isLocked) {
+  const input = document.getElementById('courseMinPctInput');
+  const btn = document.getElementById('btnUnlockMinPct');
+  if (!input || !btn) return;
+
+  if (isLocked) {
+    input.readOnly = true;
+    input.style.background = 'rgba(255, 255, 255, 0.04)';
+    input.style.color = '#93c5fd';
+    input.style.cursor = 'not-allowed';
+    btn.innerHTML = '✏️ Modifica';
+    btn.className = 'btn btn-secondary btn-sm';
+    btn.style.color = '#60a5fa';
+    btn.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+  } else {
+    input.readOnly = false;
+    input.style.background = '#090d16';
+    input.style.color = '#ffffff';
+    input.style.cursor = 'text';
+    input.focus();
+    input.select();
+    btn.innerHTML = '🔒 Blocca';
+    btn.className = 'btn btn-primary btn-sm';
+    btn.style.color = '#ffffff';
+    btn.style.borderColor = 'transparent';
+  }
+}
+
+function toggleMinPctUnlock() {
+  const input = document.getElementById('courseMinPctInput');
+  if (!input) return;
+  const currentlyLocked = input.readOnly;
+  setMinPctFieldLocked(!currentlyLocked);
+}
+
+function openAddCourseModal() {
+  document.getElementById('courseModalTitle').textContent = 'Aggiungi Nuovo Insegnamento';
+  document.getElementById('courseEditIndex').value = '-1';
+  document.getElementById('courseNameInput').value = '';
+  document.getElementById('courseTotalInput').value = '';
+  document.getElementById('courseMinPctInput').value = '65';
+  document.getElementById('courseDoneInput').value = '0';
+  document.getElementById('courseAttendedInput').value = '0';
+  setMinPctFieldLocked(true);
+  document.getElementById('courseModal').style.display = 'flex';
+}
+
+function openEditCourseModal(index) {
+  const c = appCourses[index];
+  if (!c) return;
+
+  document.getElementById('courseModalTitle').textContent = 'Modifica Insegnamento';
+  document.getElementById('courseEditIndex').value = index;
+  document.getElementById('courseNameInput').value = c.name;
+  document.getElementById('courseTotalInput').value = c.total;
+  document.getElementById('courseMinPctInput').value = c.minPct || 65;
+  document.getElementById('courseDoneInput').value = c.done || 0;
+  document.getElementById('courseAttendedInput').value = c.attended || 0;
+
+  // Se ha una soglia diversa dal 65% standard (es. 75% o 80%), mostra lo stato coerente o bloccalo
+  setMinPctFieldLocked(true);
+  document.getElementById('courseModal').style.display = 'flex';
+}
+
+function closeCourseModal() {
+  setMinPctFieldLocked(true);
+  document.getElementById('courseModal').style.display = 'none';
+}
+
+function handleSaveCourse(event) {
+  event.preventDefault();
+  const index = parseInt(document.getElementById('courseEditIndex').value);
+  const name = document.getElementById('courseNameInput').value.trim();
+  const total = parseInt(document.getElementById('courseTotalInput').value) || 1;
+  const minPct = parseInt(document.getElementById('courseMinPctInput').value) || 65;
+  const done = parseInt(document.getElementById('courseDoneInput').value) || 0;
+  const attended = parseInt(document.getElementById('courseAttendedInput').value) || 0;
+
+  const courseObj = {
+    name,
+    total,
+    minPct,
+    done,
+    attended,
+    isIcsSynced: false
+  };
+
+  if (index >= 0 && index < appCourses.length) {
+    appCourses[index] = courseObj;
+    showToast('Corso aggiornato con successo');
+  } else {
+    appCourses.push(courseObj);
+    showToast('Nuovo corso inserito');
+  }
+
+  closeCourseModal();
+  displayCourses = JSON.parse(JSON.stringify(appCourses));
+  renderCoursesGrid();
+  triggerAutoSave();
+}
+
+function removeCourse(index) {
+  const name = appCourses[index] ? appCourses[index].name : 'questo corso';
+  if (confirm(`Sei sicuro di voler eliminare "${name}"?`)) {
+    appCourses.splice(index, 1);
+    displayCourses = JSON.parse(JSON.stringify(appCourses));
+    renderCoursesGrid();
+    triggerAutoSave();
+    showToast('Corso rimosso');
+  }
+}
+
+/* ==========================================================================
+   8. IMPORTAZIONE ICATT
+   ========================================================================== */
+
+function openImportModal() {
+  document.getElementById('modalImportText').value = '';
+  document.getElementById('importModal').style.display = 'flex';
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+}
+
+function parseIcatText(rawText) {
+  const regex = /(FV\d+)\s*([\s\S]+?)\s*(\d+)\s+(\d+)\s+(\d+)\s*\d+%/gi;
+  let match;
+  const parsed = [];
+
+  while ((match = regex.exec(rawText)) !== null) {
+    const name = match[2].trim().replace(/\s+/g, ' ');
+    const total = parseInt(match[3]);
+    const done = parseInt(match[4]);
+    const attended = parseInt(match[5]);
+
+    if (name && !isNaN(total)) {
+      parsed.push({
+        name,
+        total,
+        minPct: 65,
+        done: isNaN(done) ? 0 : done,
+        attended: isNaN(attended) ? 0 : attended,
+        isIcsSynced: false
+      });
+    }
+  }
+
+  return parsed;
+}
+
+function executeIcatImport() {
+  const rawText = document.getElementById('modalImportText').value.trim();
+  if (!rawText) return;
+
+  const importedList = parseIcatText(rawText);
+  if (importedList.length === 0) {
+    alert('Impossibile interpretare il testo. Copia l\'intera tabella da iCatt compresi i codici (FV...).');
+    return;
+  }
+
+  let updated = 0;
+  let added = 0;
+
+  importedList.forEach(imported => {
+    const existingIndex = appCourses.findIndex(c => c.name.toLowerCase().trim() === imported.name.toLowerCase().trim());
+    if (existingIndex >= 0) {
+      appCourses[existingIndex].total = imported.total;
+      appCourses[existingIndex].done = imported.done;
+      appCourses[existingIndex].attended = imported.attended;
+      updated++;
+    } else {
+      appCourses.push(imported);
+      added++;
+    }
+  });
+
+  // iCatt sostituisce il conteggio ufficiale: registra gli eventi passati per evitare doppi conteggi.
+  closeImportModal();
+  displayCourses = JSON.parse(JSON.stringify(appCourses));
+  renderCoursesGrid();
+  triggerAutoSave();
+  showToast(`Importazione completata! ${updated} aggiornati, ${added} nuovi.`);
+}
+
+/* ==========================================================================
+   9. BACKUP EXPORT / IMPORT LOCALE
+   ========================================================================== */
+
+function exportDataJson() {
+  const dataToExport = {
+    user: currentUser ? currentUser.username : 'unipresenze_user',
+    exported_at: new Date().toISOString(),
+    courses: appCourses,
+    lesson_responses: lessonResponses
+  };
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+  const dl = document.createElement('a');
+  dl.setAttribute("href", dataStr);
+  dl.setAttribute("download", `presenze_backup_${new Date().toISOString().slice(0,10)}.json`);
+  document.body.appendChild(dl);
+  dl.click();
+  dl.remove();
+  showToast('Backup JSON scaricato con successo!');
+}
+
+function importDataJson(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const list = Array.isArray(parsed) ? parsed : parsed.courses;
+      if (Array.isArray(list)) {
+        appCourses = list;
+        if (parsed.lesson_responses && typeof parsed.lesson_responses === 'object') lessonResponses = parsed.lesson_responses;
+        displayCourses = JSON.parse(JSON.stringify(appCourses));
+        renderCoursesGrid();
+        triggerAutoSave();
+        closeProfileModal();
+        showToast('Backup ripristinato con successo!');
+      } else {
+        showToast('File backup non valido', 'error');
+      }
+    } catch (err) {
+      showToast('Errore lettura JSON backup', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+</script>
+
+</body>
+</html>

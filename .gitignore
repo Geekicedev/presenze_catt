@@ -1,0 +1,26 @@
+# Runtime user data and secrets
+/data/*
+!/data/.htaccess
+!/data/.gitkeep
+*.pem
+*.key
+*.secret
+.env
+.env.*
+!*.example
+
+# Generated calendar data (sensitive or deployment-specific)
+/lezioni.ics
+/lessons_catalog.json
+
+# Local environment, caches and archived copies
+/push_venv/
+/__pycache__/
+*.py[cod]
+*.bak
+*.bak_*
+/backups/
+/backup_pre_push/
+/pre_redesign_backup/
+node_modules/
+.DS_Store

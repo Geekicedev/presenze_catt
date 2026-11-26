@@ -1,0 +1,2 @@
+# Keep account records and push credentials out of the public web root.
+Require all denied
